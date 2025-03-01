@@ -44,8 +44,7 @@ export default function Page(){
         mood?: string; 
         tags?: string[]; 
         image: string; 
-      }[];
-      console.log(data);
+      }[];      
       const formattedDreams: Dream[] = data.map(dream => ({
         id: (dream.id),
         title: dream.title,

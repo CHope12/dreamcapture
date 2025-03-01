@@ -191,8 +191,7 @@ export default function Page(){
     }
     if (progressMessage === "Storing Dream Data...") {
       setProgressStage(5);
-    }
-    console.log("Progress Stage:", progressStage);
+    }    
   }, [progressMessage]);
 
   const [loaderOpen, setLoaderOpen] = useState(false);
