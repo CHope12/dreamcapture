@@ -8,9 +8,9 @@ DreamCapture is an AI-powered image generation pipeline optimized for **speed, c
 -  **Cost-Efficient** – Max GPU rental cost of **$0.44/hr**, with an average cost per image of **0.024 cents**.  
 -  **Serverless API with Custom Docker Image** – Hosted on RunPod using a modified version of [blib-la/runpod-worker-comfy](https://github.com/blib-la/runpod-worker-comfy).  
 -  **Optimized Prompts** – Powered by **GPT-4o**, ensuring high-fidelity prompts tailored for DynavisionXL.  
--  **Intelligent Caching** –  
-  - **Aggressive 1-year caching** via Firebase & `next.config.js` to prevent unnecessary re-downloads.  
-  - **Vercel CDN** caches image URLs, reducing Firebase bandwidth usage.  
+-  **Intelligent Caching**
+    - **Aggressive 1-year caching** via Firebase & `next.config.js` to prevent unnecessary re-downloads.  
+    - **Vercel CDN** caches image URLs, reducing Firebase bandwidth usage.  
 
 ## **Prompt Optimization with GPT-4o**  
 
