@@ -5,6 +5,7 @@ import Sketch from "@/components/sketch";
 import { doc, getDoc } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { startApp, db } from "@/lib/firebase";
+import { User } from "firebase/auth";
 
 const ThreeScene = ({ dreamId }: {dreamId: string}) => {
   const containerRef = useRef(null);
