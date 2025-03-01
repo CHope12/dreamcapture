@@ -14,18 +14,28 @@ export function CalendarQuickView({ userId }: { userId: string }) {
 
   useEffect(() => {
     const fetchEntries = async () => {
-      const dreams = await getDreamEntries(userId);
-      console.log("Dreams: ")
-      setEntries(dreams);
+      const rawDreams = await getDreamEntries(userId) as {
+        id: string;
+        title?: string;
+        date?: string;
+        description?: string;
+        mood?: string;
+        tags?: string[];
+        image?: string;
+      }[];
+      const formattedDreams: Dream[] = rawDreams.map(dream => ({
+        id: dream.id,
+        title: dream.title || '',
+        date: dream.date || new Date().toISOString(),
+        description: dream.description || '',
+        mood: dream.mood || '',
+        tags: dream.tags || [],
+        image: dream.image || ''
+      }));
+      setEntries(formattedDreams);
     };
     fetchEntries();
-  }, []);
-
-  useEffect(() => {
-    console.log("Entries: ")
-    console.log(entries);
-  }, [entries])
-
+  }, []);  
 
   const [selectedDayDreams, setSelectedDayDreams] = useState<Dream[]>([]);
   const [allDates, setAllDates] = useState<Date[]>([]);

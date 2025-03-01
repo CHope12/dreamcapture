@@ -18,11 +18,28 @@ export function JournalQuickView({ userId }: { userId : string} ) {
 
   useEffect(() => {
     const fetchEntries = async () => {
-      const dreams = await getDashboardEntries(userId);
-      if (dreams.length > 4) {
-        setEntries(dreams.slice(0, 4));
+      const rawDreams = await getDashboardEntries(userId) as {
+        id: string;
+        title?: string;
+        date?: string;
+        description?: string;
+        mood?: string;
+        tags?: string[];
+        image?: string;
+      }[];
+      const formattedDreams: Dream[] = rawDreams.map(dream => ({
+        id: dream.id,
+        title: dream.title || '',
+        date: dream.date || new Date().toISOString(),
+        description: dream.description || '',
+        mood: dream.mood || '',
+        tags: dream.tags || [],
+        image: dream.image || ''
+      }));
+      if (formattedDreams.length > 4) {
+        setEntries(formattedDreams.slice(0, 4));
       } else {
-        setEntries(dreams);
+        setEntries(formattedDreams);
       }
     };
     fetchEntries();
