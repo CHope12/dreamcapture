@@ -344,3 +344,7 @@ export async function GET(req: Request) {
 
   return new Response(readable, { headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Connection": "keep-alive" } });
 }
+
+export const config = {
+  runtime: "edge",
+};
