@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { DefaultInput } from "@/components/ui/input";
+import { getAuth,onAuthStateChanged, User } from "firebase/auth";
 
 declare global {
   interface Window {
@@ -20,39 +21,40 @@ declare global {
   }
 }
 
-export default function Page(){
-  
-  const router = useRouter();
+export default function Page(){  
 
   //firebase  
-  startApp();  
-  const [user, setUser] = useState<any>(null);
-  
+  startApp();
+  const [isLoading, setIsLoading] = useState(true)
+  const [user, setUser] = useState<null | User>(null)    
+
+  const router = useRouter();
+
   useEffect(() => {
-    const unsubscribe = subscribeToAuthChanges(setUser);
-    return () => unsubscribe();    
+    const auth = getAuth()
+    return onAuthStateChanged(auth, (user) => {
+      setIsLoading(false);
+      setUser(user);
+      if(user) router.push("/dashboard");
+    });
   }, []);
-  
-  useEffect(() => {
-    if (user !== null) {
-      router.push("/dashboard");
-    }
-  }, [user]);
 
 
   const handleGoogleLogin = async () => {
     try {      
       await signInWithGoogle();
+      router.push("/dashboard");
     } catch (error) {
-      console.error("Google Login Error:", error);
+      alert("Google Login Error:" + error);
     }
   }
 
   const handleFacebookLogin = async () => {
     try {
       await signInWithFacebook();
+      router.push("/dashboard");
     } catch (error) {
-      console.error("Facebook Login Error:", error);
+      alert("Facebook Login Error:" + error);
     }
   }
 
@@ -74,8 +76,9 @@ export default function Page(){
     }
     try {
       await signIn(emailRef.current.value, passwordRef.current.value);
+      router.push("/dashboard");
     } catch (error) {
-      console.error("Email Login Error:", error);
+      alert("Email Login Error:" + error);
       setEmailMessage("There was an error logging in with email and password");
     }
   }
