@@ -23,9 +23,11 @@ export default class Sketch {
     this.container.appendChild(this.renderer.domElement);
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.controls.enabled = true;
     this.controls.enableDamping = true;
-    this.controls.enableZoom = true;
+    this.controls.enableZoom = true;    
     this.controls.enableRotate = true;
+    this.controls.enablePan = false;
 
     this.createScene360();
     this.render();
@@ -61,12 +63,14 @@ export default class Sketch {
   }
 
   render() {
+    if (this.cleanedUp) return;
     requestAnimationFrame(this.render.bind(this));
     this.controls.update();
     this.renderer.render(this.scene360, this.camera);
   }
 
   cleanup() {
+    this.cleanedUp = true;
     // Dispose of geometries, materials, and textures
     if (this.geometry) this.geometry.dispose();
     if (this.material) {
@@ -78,13 +82,13 @@ export default class Sketch {
     if (this.sphere) this.scene360.remove(this.sphere);
 
     // Dispose of controls
-    if (this.controls) this.controls.dispose();
+    if (this.controls) this.controls.enabled = false;
 
     // Remove renderer and its DOM element
     if (this.renderer) {
       this.renderer.dispose();
       this.container.removeChild(this.renderer.domElement);
-    }
+    }    
 
     // Clear references
     this.scene360 = null;
