@@ -5,6 +5,10 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "firebasestorage.googleapis.com",
+      },
+      {
+        protocol: "https",
+        hostname: "storage.googleapis.com",
       }
     ],
     // Enable aggressive caching for optimized images

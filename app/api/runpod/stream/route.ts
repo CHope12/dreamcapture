@@ -4,6 +4,8 @@ import { collection, addDoc, deleteDoc, setDoc, getDoc, doc } from "firebase/fir
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import OpenAI from "openai";
 
+import { initAdmin } from "@/lib/firebase-admin";
+
 const RUNPOD_API_KEY = process.env.RUNPOD_API_KEY!;
 const RUNPOD_API_URL = process.env.RUNPOD_API_URL!;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY!;
@@ -112,18 +114,20 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Task ID is required" }, { status: 400 });
   }
 
-  const taskDoc = await getDoc(doc(db, "tasks", taskId));
-    
-  if (!taskDoc.exists()) {
+  const { db, storage } = initAdmin();
+
+  const taskDoc = await db.collection("tasks").where("taskId", "==", taskId).get();
+
+  if (taskDoc.empty) {
     console.log("Task not found");
     return NextResponse.json({ error: "Task not found" }, { status: 404 });
-  }
-  
-  const taskData = taskDoc.data();
+  }  
+
+  const taskData = taskDoc.docs[0].data();
 
   console.log("Task Data:", taskData);
 
-  const { userId, prompt, title, date, mood, tags } = taskData;  
+  const { userId, prompt, title, date, mood, tags } = taskData as { userId: string, prompt: string, title: string, date: string, mood?: string, tags?: string[] };  
 
   const { readable, writable } = new TransformStream();
   const writer = writable.getWriter();
@@ -297,24 +301,40 @@ export async function GET(req: Request) {
 
       await sendMessage("Saving Dreamscape...");
 
-      const bytes = Uint8Array.from(atob(data.output.message), c => c.charCodeAt(0));
-      const fileName = `dreams/${Date.now()}-${Math.random().toString(36).substring(7)}.png`;
-      const storageRef = ref(storage, fileName);
-      const metadata = { contentType: "image/jpg", cacheControl: "public, max-age=31536000, immutable" };
-      await uploadBytes(storageRef, bytes, metadata);
-      const imageURL = await getDownloadURL(storageRef);
+      //const bytes = Uint8Array.from(atob(data.output.message), c => c.charCodeAt(0));      
+      const fileName = `dreams/${Date.now()}-${Math.random().toString(36).substring(7)}.png`;      
+      //const metadata = { contentType: "image/jpg", cacheControl: "public, max-age=31536000, immutable" };
 
+      //const storageRef = ref(storage, fileName);
+      //await uploadBytes(storageRef, bytes, metadata);
+      //const imageURL = await getDownloadURL(storageRef);
+      //console.log("Image URL:", imageURL);
+
+      const buffer = Buffer.from(data.output.message, 'base64');
+
+      const bucket = storage.bucket();
+      const file = bucket.file(fileName);
+      await file.save(buffer, {
+        metadata: {
+          contentType: "image/jpg",
+          cacheControl: "public, max-age=31536000, immutable"
+        }
+      });
+
+      const imageURL = await file.getSignedUrl({
+        action: 'read',
+        expires: '03-01-2500' // Far future expiration
+      });
+      
       console.log("Image URL:", imageURL);
 
       await sendMessage("Storing Dream Data...");
-      const dream = { userId, title, description: prompt, date, mood, tags, image: imageURL };
-      const docRef = await addDoc(collection(db, `dreams/${userId}/dreamEntries`), dream);
-
-      console.log("Dream ID:", docRef);
+      const dream = { userId, title, description: prompt, date, mood, tags, image: imageURL[0] };
+      const dreamRef = await db.collection(`dreams/${userId}/dreamEntries`).add(dream);              
 
       //Delete task not update
-      await deleteDoc(doc(db, "tasks", taskId));
-      await sendFinalResponse({ message: "Dream successfully generated and stored!", imageURL, dreamId: docRef.id });
+      await db.collection("tasks").doc(taskId).delete();
+      await sendFinalResponse({ message: "Dream successfully generated and stored!", imageURL, dreamId: dreamRef.id });
 
     } catch (error) {
       await writer.write(encoder.encode(`data: ${JSON.stringify({ status: "error", message: "Failed to process request", details: (error as any).message })}\n\n`));

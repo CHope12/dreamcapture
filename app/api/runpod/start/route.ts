@@ -1,29 +1,38 @@
 import { NextResponse } from "next/server";
-import { app, db, startApp, storage } from "@/lib/firebase";
-import { collection, addDoc, setDoc, doc } from "firebase/firestore";
+import { initAdmin } from "@/lib/firebase-admin";
 
 export async function POST(req: Request) {
   try {
+    const { db, storage } = initAdmin();
     const body = await req.json();
     if (!body) return NextResponse.json({ error: "Missing request body" }, { status: 400 });
-
-    console.log("Request Body:", body);
 
     const { userId, prompt, title, date, mood, tags } = body;
     if (!userId || !prompt || !title || !date) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }    
 
-    // 🔹 Simulate creating a task for tracking
     const taskId = `task-${Date.now()}`;
 
-    //Save task in firestore
-    await setDoc(doc(db, "tasks", taskId), { taskId, userId, prompt, title, date, mood, tags, status: "pending" });
+    await db.collection('tasks').add({
+      taskId,
+      userId,
+      prompt,
+      title,
+      date,
+      mood,
+      tags,
+      status: "pending",
+    });    
 
-    console.log("New Task ID:", taskId);
+    console.log('Task created:', taskId);
 
     return NextResponse.json({ taskId });
   } catch (error) {
-    return NextResponse.json({ error: "Failed to start generation", details: (error as any).message }, { status: 500 });
+    console.error('Error creating task:', error);
+    return NextResponse.json({ 
+      error: "Failed to start generation", 
+      details: error instanceof Error ? error.message : 'Unknown error' 
+    }, { status: 500 });
   }
 }
